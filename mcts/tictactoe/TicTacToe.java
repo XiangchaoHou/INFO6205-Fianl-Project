@@ -20,11 +20,16 @@ public class TicTacToe implements Game<TicTacToe> {
      * @param args command-line arguments.
      */
     public static void main(String[] args) {
-        // NOTE the behavior of the game to be run will be based on the TicTacToe instance field: random.
-        State<TicTacToe> state = new TicTacToe().runGame();
-        if (state.winner().isPresent()) System.out.println("TicTacToe: winner is: " + state.winner().get());
-        else System.out.println("TicTacToe: draw");
+        TicTacToe game = new TicTacToe();
+        State<TicTacToe> state = game.runGame();
+        System.out.println("____________\n" + ((TicTacToeState) state).position().render());
+
+        if (state.winner().isPresent())
+            System.out.println("TicTacToe: winner is: " + state.winner().get());
+        else
+            System.out.println("TicTacToe: tie");
     }
+
 
     public static final int X = 1;
     public static final int O = 0;
