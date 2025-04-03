@@ -20,12 +20,10 @@ public class TicTacToeNode implements Node<TicTacToe> {
     private int playouts;
     private final Move<TicTacToe> move; // 记录从父状态到本状态的走法，根节点为 null
 
-    // 用于根节点构造
     public TicTacToeNode(State<TicTacToe> state) {
         this(state, null);
     }
 
-    // 构造时指定状态和走法
     public TicTacToeNode(State<TicTacToe> state, Move<TicTacToe> move) {
         this.state = state;
         this.move = move;
@@ -57,12 +55,10 @@ public class TicTacToeNode implements Node<TicTacToe> {
         return state;
     }
 
-    // 返回所有子节点
     public Collection<TicTacToeNode> getChildren() {
         return children;
     }
 
-    // 添加一个子节点
     @Override
     public void addChild(State<TicTacToe> state) {
         TicTacToeNode newNode = new TicTacToeNode(state);
@@ -73,37 +69,29 @@ public class TicTacToeNode implements Node<TicTacToe> {
         children.add(child);
     }
 
-
-
-    // 用于反向传播时更新本节点的统计数据
     public void updateStats(int score) {
         wins += score;
         playouts += 1;
     }
 
-    // 获取当前胜局数
     public int getWins() {
         return wins;
     }
 
-    // 获取当前模拟次数
     public int getPlayouts() {
         return playouts;
     }
 
-    // 返回平均胜率（得分 / 模拟次数）
     public double getWinRate() {
         if (playouts == 0) return 0;
         return (double) wins / playouts;
     }
 
-    // 判断当前节点是否已将所有可能走法扩展完毕
     public boolean isFullyExpanded() {
         int possibleMoves = state().moves(state().player()).size();
         return children.size() >= possibleMoves;
     }
 
-    // 判断该节点是否已存在对应走法的子节点
     public boolean hasChildForMove(Move<TicTacToe> move) {
         for (TicTacToeNode child : children) {
             if (child.getMove() != null && child.getMove().equals(move))
@@ -112,7 +100,6 @@ public class TicTacToeNode implements Node<TicTacToe> {
         return false;
     }
 
-    // 以下方法保留原有骨架，可根据需要调整
     @Override
     public void backPropagate() {
         // 在本实现中我们使用 updateStats() 完成反向传播，不再调用此方法

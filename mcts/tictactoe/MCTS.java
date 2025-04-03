@@ -8,125 +8,215 @@ import com.phasmidsoftware.dsaipg.projects.mcts.core.Move;
 import com.phasmidsoftware.dsaipg.projects.mcts.core.Node;
 import com.phasmidsoftware.dsaipg.projects.mcts.core.State;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 public class MCTS {
+    private final double explorationParameter = Math.sqrt(2);
 
-    private static final int ITERATIONS = 1000;
-    private static final double EXPLORATION_CONSTANT = Math.sqrt(2);
+    private final int maxIterations;
+
+    private final Random random;
 
     public static void main(String[] args) {
-        // 用默认构造器初始化游戏，根节点对应起始状态
         TicTacToe game = new TicTacToe();
-        TicTacToeNode root = new TicTacToeNode(game.new TicTacToeState());
-        MCTS mcts = new MCTS(root);
 
-        // 进行若干次模拟
-        for (int i = 0; i < ITERATIONS; i++) {
-            List<TicTacToeNode> path = new ArrayList<>();
-            TicTacToeNode leaf = select(root, path);
-            int simulationScore = simulate(leaf.state());
-            backpropagate(path, simulationScore);
+        playFullGame(game);
+    }
+
+    public static void playFullGame(TicTacToe game) {
+        State<TicTacToe> currentState = game.start();
+        int currentPlayer = game.opener();
+
+        System.out.println("Start！");
+        System.out.println("Board:");
+        System.out.println(currentState);
+
+        while (!currentState.isTerminal()) {
+            System.out.println("\nPlayer " + (currentPlayer == TicTacToe.X ? "X" : "O") + " Round");
+
+            TicTacToeNode rootNode = new TicTacToeNode(currentState);
+            MCTS mcts = new MCTS(rootNode, 1000);
+
+            Move<TicTacToe> bestMove = mcts.findBestMove();
+
+            currentState = currentState.next(bestMove);
+
+            System.out.println("Move: " + bestMove);
+            System.out.println("Board:");
+            System.out.println(currentState);
+
+            currentPlayer = 1 - currentPlayer;
         }
 
-        // 从根节点选择胜率最高的子节点作为最佳走法
-        TicTacToeNode bestChild = bestChild(root);
-        System.out.println("建议走法: " + bestChild.getMove());
-        System.out.println("扩展后的局面:\n" + bestChild.state().toString());
+        // 显示游戏结果
+        System.out.println("\nGame Over!");
+        if (currentState.winner().isPresent()) {
+            int winner = currentState.winner().get();
+            System.out.println("Winner: Player " + (winner == TicTacToe.X ? "X" : "O"));
+        } else {
+            System.out.println("Draw!");
+        }
     }
 
-    private final TicTacToeNode root;
-
-    public MCTS(TicTacToeNode root) {
+    public MCTS(Node<TicTacToe> root, int maxIterations) {
         this.root = root;
+        this.maxIterations = maxIterations;
+        this.random = new Random();
     }
 
-    // 选择阶段：递归沿着最高 UCT 值的子节点前进，直到到达叶节点或未完全扩展的节点
-    private static TicTacToeNode select(TicTacToeNode node, List<TicTacToeNode> path) {
-        path.add(node);
-        if (node.state().isTerminal()) {
+    public MCTS(Node<TicTacToe> root) {
+        this(root, 1000);
+    }
+
+    public Move<TicTacToe> findBestMove() {
+        if (root.isLeaf()) {
+            return null;
+        }
+
+        for (int i = 0; i < maxIterations; i++) {
+            List<TicTacToeNode> path = new ArrayList<>();
+            TicTacToeNode selectedNode = selectWithPath(root, path);
+
+            TicTacToeNode expandedNode = selectedNode;
+            if (!selectedNode.isLeaf() && !selectedNode.isFullyExpanded()) {
+                expandedNode = expand(selectedNode);
+                path.add(expandedNode);
+            }
+
+            int simulationResult = simulate(expandedNode);
+
+            backpropagate(path, simulationResult);
+        }
+
+        return getMostVisitedChild(root).getMove();
+    }
+
+    private TicTacToeNode selectWithPath(Node<TicTacToe> node, List<TicTacToeNode> path) {
+        TicTacToeNode currentNode = (TicTacToeNode) node;
+        path.add(currentNode);
+
+        if (currentNode.isLeaf() || !currentNode.isFullyExpanded()) {
+            return currentNode;
+        }
+
+        TicTacToeNode bestChild = getBestChild(currentNode, explorationParameter);
+        return selectWithPath(bestChild, path);
+    }
+
+    private TicTacToeNode expand(TicTacToeNode node) {
+        Collection<Move<TicTacToe>> possibleMoves = node.state().moves(node.state().player());
+        List<Move<TicTacToe>> unexpandedMoves = new ArrayList<>();
+
+        for (Move<TicTacToe> move : possibleMoves) {
+            if (!node.hasChildForMove(move)) {
+                unexpandedMoves.add(move);
+            }
+        }
+
+        if (unexpandedMoves.isEmpty()) {
             return node;
         }
-        if (!node.isFullyExpanded()) {
-            return expand(node, path);
+
+        Move<TicTacToe> move = unexpandedMoves.get(random.nextInt(unexpandedMoves.size()));
+
+        State<TicTacToe> newState = node.state().next(move);
+        TicTacToeNode newNode = new TicTacToeNode(newState, move);
+
+        node.addChildNode(newNode);
+
+        return newNode;
+    }
+
+    private int simulate(TicTacToeNode node) {
+        if (node.isLeaf()) {
+            return evaluateTerminalState(node.state());
+        }
+
+        State<TicTacToe> currentState = node.state();
+        int currentPlayer = currentState.player();
+
+        while (!currentState.isTerminal()) {
+            Move<TicTacToe> randomMove = currentState.chooseMove(currentPlayer);
+
+            currentState = currentState.next(randomMove);
+
+            currentPlayer = 1 - currentPlayer;
+        }
+
+        return evaluateTerminalState(currentState);
+    }
+
+    private int evaluateTerminalState(State<TicTacToe> state) {
+        if (!state.isTerminal()) {
+            throw new IllegalArgumentException("Not a terminal state");
+        }
+
+        if (state.winner().isEmpty()) {
+            return 1;
         } else {
-            // 选择 UCT 值最大的子节点
-            TicTacToeNode best = null;
-            double bestValue = -Double.MAX_VALUE;
-            for (TicTacToeNode child : node.getChildren()) {
-                double uctValue = child.getWinRate() +
-                        EXPLORATION_CONSTANT * Math.sqrt(Math.log(node.getPlayouts() + 1) / (child.getPlayouts() + 1));
-                if (uctValue > bestValue) {
-                    bestValue = uctValue;
-                    best = child;
-                }
-            }
-            if (best == null) {
-                return node;
-            }
-            return select(best, path);
+            int winner = state.winner().get();
+            int rootPlayer = root.state().player();
+
+            return (winner == rootPlayer) ? 2 : 0;
         }
     }
 
-    // 扩展阶段：为当前节点中尚未探索的走法扩展出一个新子节点
-    private static TicTacToeNode expand(TicTacToeNode node, List<TicTacToeNode> path) {
-        Collection<Move<TicTacToe>> moves = node.state().moves(node.state().player());
-        for (Move<TicTacToe> move : moves) {
-            if (!node.hasChildForMove(move)) {
-                State<TicTacToe> newState = node.state().next(move);
-                TicTacToeNode child = new TicTacToeNode(newState, move);
-                node.addChildNode(child);
-                path.add(child);
-                return child;
+    private void backpropagate(List<TicTacToeNode> path, int result) {
+        for (int i = path.size() - 1; i >= 0; i--) {
+            TicTacToeNode node = path.get(i);
+            node.updateStats(result);
+        }
+    }
+
+    private TicTacToeNode getBestChild(Node<TicTacToe> node, double explorationValue) {
+        TicTacToeNode parentNode = (TicTacToeNode) node;
+        Collection<TicTacToeNode> children = parentNode.getChildren();
+
+        TicTacToeNode bestChild = null;
+        double bestValue = Double.NEGATIVE_INFINITY;
+
+        for (TicTacToeNode child : children) {
+            if (child.getPlayouts() == 0) {
+                continue;
+            }
+
+            double exploitationTerm = (double) child.getWins() / child.getPlayouts();
+            double explorationTerm = explorationValue * Math.sqrt(Math.log(parentNode.getPlayouts()) / child.getPlayouts());
+            double uctValue = exploitationTerm + explorationTerm;
+
+            if (uctValue > bestValue) {
+                bestValue = uctValue;
+                bestChild = child;
             }
         }
-        // 如果所有走法均已扩展，则随机返回一个子节点
-        return node.getChildren().iterator().next();
+
+        if (bestChild == null && !children.isEmpty()) {
+            bestChild = children.iterator().next();
+        }
+
+        return bestChild;
     }
 
-    // 模拟阶段：从给定状态开始随机模拟直到游戏结束，并返回得分
-    private static int simulate(State<TicTacToe> state) {
-        State<TicTacToe> simState = state;
-        int simulationPlayer = simState.player();
-        Random rand = new Random();
-        while (!simState.isTerminal()) {
-            Collection<Move<TicTacToe>> moves = simState.moves(simState.player());
-            if (moves.isEmpty()) break;
-            int index = rand.nextInt(moves.size());
-            Move<TicTacToe> move = moves.stream().skip(index).findFirst().get();
-            simState = simState.next(move);
-        }
-        Optional<Integer> winner = simState.winner();
-        // 得分规则：赢 2 分，平局 1 分，输 0 分
-        if (winner.isPresent()) {
-            if (winner.get() == simulationPlayer) return 2;
-            else return 0;
-        }
-        return 1;
-    }
+    private TicTacToeNode getMostVisitedChild(Node<TicTacToe> node) {
+        TicTacToeNode parentNode = (TicTacToeNode) node;
+        Collection<TicTacToeNode> children = parentNode.getChildren();
 
-    // 反向传播：沿着选择路径更新每个节点的统计数据
-    private static void backpropagate(List<TicTacToeNode> path, int simulationScore) {
-        for (TicTacToeNode node : path) {
-            node.updateStats(simulationScore);
+        if (children.isEmpty()) {
+            throw new IllegalStateException("no child");
         }
-    }
 
-    // 从某节点中选出平均胜率最高的子节点
-    private static TicTacToeNode bestChild(TicTacToeNode node) {
-        TicTacToeNode best = null;
-        double bestRate = -Double.MAX_VALUE;
-        for (TicTacToeNode child : node.getChildren()) {
-            double rate = child.getWinRate();
-            if (rate > bestRate) {
-                bestRate = rate;
-                best = child;
+        TicTacToeNode mostVisitedChild = null;
+        int mostVisits = -1;
+
+        for (TicTacToeNode child : children) {
+            if (child.getPlayouts() > mostVisits) {
+                mostVisits = child.getPlayouts();
+                mostVisitedChild = child;
             }
         }
-        return best;
+
+        return mostVisitedChild;
     }
+
+    private final Node<TicTacToe> root;
 }

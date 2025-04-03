@@ -136,6 +136,12 @@ public class TicTacToe implements Game<TicTacToe> {
             return new int[]{i, j};
         }
 
+        @Override
+        public String toString() {
+            return "Player " + player + " move to (" + i + ", " + j + ")";
+        }
+
+
         private final int player;
         private final int i;
         private final int j;
@@ -232,10 +238,9 @@ public class TicTacToe implements Game<TicTacToe> {
 
         @Override
         public String toString() {
-            return "TicTacToe{\n" +
-                    position +
-                    "\n}";
+            return position().render();
         }
+
 
         public TicTacToeState(Position position) {
             this.position = position;
