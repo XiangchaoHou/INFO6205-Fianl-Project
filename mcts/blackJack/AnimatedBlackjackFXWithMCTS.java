@@ -23,8 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Enhanced JavaFX frontend for the Blackjack MCTS AI system
- * Includes animations for cards and game flow
- * Fixed version with improved AI mode and game flow
+ * Final fixed version with proper button handling in AI mode
  */
 public class AnimatedBlackjackFXWithMCTS extends Application {
 
@@ -58,7 +57,7 @@ public class AnimatedBlackjackFXWithMCTS extends Application {
     // Animation controller
     private BlackjackCardAnimations animations;
 
-    // Animation and game state flags
+    // Game state flags
     private AtomicBoolean animationInProgress = new AtomicBoolean(false);
     private AtomicBoolean aiMoveInProgress = new AtomicBoolean(false);
     private AtomicBoolean gameInProgress = new AtomicBoolean(false);
@@ -229,6 +228,27 @@ public class AnimatedBlackjackFXWithMCTS extends Application {
         Platform.runLater(this::startNewGame);
     }
 
+    /**
+     * Helper method to update button states based on current game state
+     */
+    private void updateButtonStates() {
+        Platform.runLater(() -> {
+            boolean isAnimating = animationInProgress.get();
+            boolean isAiThinking = aiMoveInProgress.get();
+            boolean isGameOver = currentState != null && currentState.isTerminal();
+
+            // In AI mode, player action buttons should always be disabled
+            hitButton.setDisable(isAnimating || isAiThinking || isGameOver || aiPlayerMode);
+            standButton.setDisable(isAnimating || isAiThinking || isGameOver || aiPlayerMode);
+
+            // New game button is enabled except during animations/AI thinking
+            newGameButton.setDisable(isAnimating || isAiThinking);
+
+            // AI toggle is only enabled when not in the middle of a game action
+            aiModeToggle.setDisable(isAnimating || isAiThinking);
+        });
+    }
+
     private void toggleAIMode() {
         // Only allow toggling when not in the middle of a game animation or AI move
         if (animationInProgress.get() || aiMoveInProgress.get()) {
@@ -239,6 +259,9 @@ public class AnimatedBlackjackFXWithMCTS extends Application {
 
         aiPlayerMode = aiModeToggle.isSelected();
         aiModeToggle.setText("AI Player: " + (aiPlayerMode ? "ON" : "OFF"));
+
+        // Update button states
+        updateButtonStates();
 
         // If toggling on mid-game and it's player's turn, let AI make a move
         if (aiPlayerMode && gameInProgress.get() && !currentState.isTerminal() && currentState.player() == 0) {
@@ -255,6 +278,9 @@ public class AnimatedBlackjackFXWithMCTS extends Application {
         // Set flags to indicate a new game is starting and animation is in progress
         gameInProgress.set(true);
         animationInProgress.set(true);
+
+        // Update button states
+        updateButtonStates();
 
         // Reset game state text
         gameStatusText.setText("");
@@ -312,16 +338,14 @@ public class AnimatedBlackjackFXWithMCTS extends Application {
     }
 
     private void finishGameSetup() {
-        // Enable/disable appropriate buttons
-        hitButton.setDisable(false);
-        standButton.setDisable(aiPlayerMode); // Disable hit/stand if AI is playing
-        newGameButton.setDisable(false);
-
         // Update dealer score display (only showing first card)
         dealerScoreText.setText("Score: ?");
 
         // Clear animation flag now that setup is complete
         animationInProgress.set(false);
+
+        // Update button states
+        updateButtonStates();
 
         // If AI mode is on, let the AI play after a short delay
         if (aiPlayerMode && !currentState.isTerminal()) {
@@ -346,10 +370,8 @@ public class AnimatedBlackjackFXWithMCTS extends Application {
         // Set flag to indicate AI is thinking
         aiMoveInProgress.set(true);
 
-        // Disable buttons while AI is thinking
-        hitButton.setDisable(true);
-        standButton.setDisable(true);
-        newGameButton.setDisable(true);
+        // Update button states to disable player actions
+        updateButtonStates();
 
         // Show thinking indicator
         aiThinkingLabel.setVisible(true);
@@ -379,31 +401,43 @@ public class AnimatedBlackjackFXWithMCTS extends Application {
                         gameStatusText.setText("AI chooses to HIT");
                         // Clear AI move flag before calling playerHit, which will handle the move
                         aiMoveInProgress.set(false);
+
+                        // Ensure buttons are correctly disabled before AI action
+                        updateButtonStates();
+
                         playerHit();
                     } else {
                         gameStatusText.setText("AI chooses to STAND");
                         // Clear AI move flag before calling playerStand, which will handle the move
                         aiMoveInProgress.set(false);
+
+                        // Ensure buttons are correctly disabled before AI action
+                        updateButtonStates();
+
                         playerStand();
                     }
                 } else {
                     // No valid move available, clear AI flag
                     aiMoveInProgress.set(false);
-                    // Re-enable new game button
-                    newGameButton.setDisable(false);
+
+                    // Update button states
+                    updateButtonStates();
                 }
             });
         });
     }
 
     private void playerHit() {
-        // Prevent actions if animation or AI move is in progress
-        if (animationInProgress.get() || (!aiPlayerMode && aiMoveInProgress.get())) {
+        // Prevent actions if animation or AI move is in progress, or if in AI mode but not called by the AI
+        if (animationInProgress.get() || aiMoveInProgress.get() || (aiPlayerMode && !gameStatusText.getText().contains("AI chooses"))) {
             return;
         }
 
         // Set animation flag to block further actions
         animationInProgress.set(true);
+
+        // Update button states
+        updateButtonStates();
 
         // Execute the HIT move
         BlackjackMove move = new BlackjackMove(BlackjackMove.Action.HIT, 0);
@@ -414,6 +448,11 @@ public class AnimatedBlackjackFXWithMCTS extends Application {
 
         // Find the new card (the last card in the new hand)
         int newCardValue = currentState.playerHand.get(currentState.playerHand.size() - 1);
+
+        // Clear AI choice text if this was an AI move
+        if (gameStatusText.getText().contains("AI chooses")) {
+            Platform.runLater(() -> gameStatusText.setText(""));
+        }
 
         // Animate the new card being dealt
         animations.animateDealCard(
@@ -440,19 +479,30 @@ public class AnimatedBlackjackFXWithMCTS extends Application {
                                 Thread.currentThread().interrupt();
                             }
                         });
+                    } else {
+                        // Update button states for player's turn
+                        updateButtonStates();
                     }
                 }
         );
     }
 
     private void playerStand() {
-        // Prevent actions if animation or AI move is in progress
-        if (animationInProgress.get() || (!aiPlayerMode && aiMoveInProgress.get())) {
+        // Prevent actions if animation or AI move is in progress, or if in AI mode but not called by the AI
+        if (animationInProgress.get() || aiMoveInProgress.get() || (aiPlayerMode && !gameStatusText.getText().contains("AI chooses"))) {
             return;
         }
 
         // Set animation flag to block further actions
         animationInProgress.set(true);
+
+        // Update button states
+        updateButtonStates();
+
+        // Clear AI choice text if this was an AI move
+        if (gameStatusText.getText().contains("AI chooses")) {
+            Platform.runLater(() -> gameStatusText.setText(""));
+        }
 
         // Execute the STAND move
         BlackjackMove move = new BlackjackMove(BlackjackMove.Action.STAND, 0);
@@ -512,6 +562,9 @@ public class AnimatedBlackjackFXWithMCTS extends Application {
         // Check if the game is over
         if (currentState.isTerminal()) {
             handleGameOver();
+        } else {
+            // Update button states if game continues
+            updateButtonStates();
         }
     }
 
@@ -556,12 +609,8 @@ public class AnimatedBlackjackFXWithMCTS extends Application {
         statsText.setText(String.format("Games: %d | Player Wins: %d | Dealer Wins: %d | Ties: %d",
                 gamesPlayed, playerWins, dealerWins, ties));
 
-        // Disable game action buttons
-        hitButton.setDisable(true);
-        standButton.setDisable(true);
-
-        // Always enable new game button
-        newGameButton.setDisable(false);
+        // Update button states for game over
+        updateButtonStates();
     }
 
     private int calculateHandValue(List<Integer> hand) {
