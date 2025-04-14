@@ -3,24 +3,22 @@ package com.phasmidsoftware.dsaipg.projects.com.phasmidsoftware.dsaipg.projects.
 import com.phasmidsoftware.dsaipg.projects.mcts.core.State;
 import com.phasmidsoftware.dsaipg.projects.mcts.tictactoe.TicTacToe;
 import org.junit.Test;
-
 import java.util.Optional;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class TicTacToeTest {
 
-    /**
-     *
-     */
     @Test
-    public void runGame() {
+    public void testRunGame() {
         long seed = 0L;
-        TicTacToe target = new TicTacToe(seed); // games run here will all be deterministic.
-        State<TicTacToe> state = target.runGame();
+        // Use a fixed seed to ensure deterministic game outcomes
+        TicTacToe game = new TicTacToe(seed);
+        State<TicTacToe> state = game.runGame();
         Optional<Integer> winner = state.winner();
-        if (winner.isPresent()) assertEquals(Integer.valueOf(TicTacToe.X), winner.get());
-        else fail("no winner");
+        if (winner.isPresent()) {
+            assertEquals("Winner should be player X.", Integer.valueOf(TicTacToe.X), winner.get());
+        } else {
+            fail("There should be a winner.");
+        }
     }
 }

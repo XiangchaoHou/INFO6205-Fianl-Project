@@ -12,22 +12,22 @@ import java.util.*;
 
 public class MCTS {
     private final double explorationParameter = Math.sqrt(2);
-
     private final int maxIterations;
-
     private final Random random;
+    private final Node<TicTacToe> root;
 
     public static void main(String[] args) {
         TicTacToe game = new TicTacToe();
-
         playFullGame(game);
     }
 
     public static void playFullGame(TicTacToe game) {
+        long startTime = System.currentTimeMillis(); // Record start time
+
         State<TicTacToe> currentState = game.start();
         int currentPlayer = game.opener();
 
-        System.out.println("Start！");
+        System.out.println("Start!");
         System.out.println("Board:");
         System.out.println(currentState);
 
@@ -38,7 +38,6 @@ public class MCTS {
             MCTS mcts = new MCTS(rootNode, 1000);
 
             Move<TicTacToe> bestMove = mcts.findBestMove();
-
             currentState = currentState.next(bestMove);
 
             System.out.println("Move: " + bestMove);
@@ -48,8 +47,10 @@ public class MCTS {
             currentPlayer = 1 - currentPlayer;
         }
 
-        // 显示游戏结果
+        long endTime = System.currentTimeMillis(); // Record end time
         System.out.println("\nGame Over!");
+        System.out.println("Time taken: " + (endTime - startTime) + " ms");
+
         if (currentState.winner().isPresent()) {
             int winner = currentState.winner().get();
             System.out.println("Winner: Player " + (winner == TicTacToe.X ? "X" : "O"));
@@ -118,12 +119,9 @@ public class MCTS {
         }
 
         Move<TicTacToe> move = unexpandedMoves.get(random.nextInt(unexpandedMoves.size()));
-
         State<TicTacToe> newState = node.state().next(move);
         TicTacToeNode newNode = new TicTacToeNode(newState, move);
-
         node.addChildNode(newNode);
-
         return newNode;
     }
 
@@ -137,9 +135,7 @@ public class MCTS {
 
         while (!currentState.isTerminal()) {
             Move<TicTacToe> randomMove = currentState.chooseMove(currentPlayer);
-
             currentState = currentState.next(randomMove);
-
             currentPlayer = 1 - currentPlayer;
         }
 
@@ -152,11 +148,10 @@ public class MCTS {
         }
 
         if (state.winner().isEmpty()) {
-            return 1;
+            return 1; // Draw
         } else {
             int winner = state.winner().get();
             int rootPlayer = root.state().player();
-
             return (winner == rootPlayer) ? 2 : 0;
         }
     }
@@ -179,11 +174,9 @@ public class MCTS {
             if (child.getPlayouts() == 0) {
                 continue;
             }
-
             double exploitationTerm = (double) child.getWins() / child.getPlayouts();
             double explorationTerm = explorationValue * Math.sqrt(Math.log(parentNode.getPlayouts()) / child.getPlayouts());
             double uctValue = exploitationTerm + explorationTerm;
-
             if (uctValue > bestValue) {
                 bestValue = uctValue;
                 bestChild = child;
@@ -202,7 +195,7 @@ public class MCTS {
         Collection<TicTacToeNode> children = parentNode.getChildren();
 
         if (children.isEmpty()) {
-            throw new IllegalStateException("no child");
+            throw new IllegalStateException("No child");
         }
 
         TicTacToeNode mostVisitedChild = null;
@@ -217,6 +210,4 @@ public class MCTS {
 
         return mostVisitedChild;
     }
-
-    private final Node<TicTacToe> root;
 }
