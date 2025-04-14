@@ -4,7 +4,8 @@
 
 package com.phasmidsoftware.dsaipg.projects.life.base;
 
-import com.phasmidsoftware.dsaipg.util.Range;
+
+import com.phasmidsoftware.dsaipg.projects.util.Range;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -478,7 +479,7 @@ public class Group implements Generational<Group, Void>, Renderable, Countable {
     private static final int LonelinessNeighborThreshold = 2;
     private static final int OvercrowdingNeighborThreshold = 3;
     private static final Range DeathRange = Range.inclusive(LonelinessNeighborThreshold, OvercrowdingNeighborThreshold);
-    private final long generation; // the current generation of this Group.
+    private final long generation; // the current generation of this Group.0
     private List<Point> points; // the list of non-empty cells within this group (must include one point at the origin).
     private Point origin; // the position of the origin relative to the grid.
     // All cells have coordinates which are relative to the origin.
@@ -496,7 +497,7 @@ public class Group implements Generational<Group, Void>, Renderable, Countable {
      * @param origin     the origin of this Group relative to the origin of the Grid.
      * @param extent1    the extent1 of this Group (i.e. the SW corner of the boundary).
      * @param extent2    the extent2 of this Group (i.e. the NE corner of the boundary).
-     * @param points     a list of points, which are in the coordinate system of this Group.
+     * @param points     a list of points, which are in the coordinate system of this Group.+
      */
     Group(long generation, Point origin, Point extent1, Point extent2, List<Point> points) {
         this.generation = generation;

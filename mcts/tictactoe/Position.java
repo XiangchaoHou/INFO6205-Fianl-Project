@@ -22,7 +22,7 @@ public class Position {
      * @param last the last player.
      * @return a Position.
      */
-    static Position parsePosition(final String grid, final int last) {
+    public static Position parsePosition(final String grid, final int last) {
         int[][] matrix = new int[gridSize][gridSize];
         int count = 0;
         String[] rows = grid.split("\\n", gridSize);
@@ -43,7 +43,7 @@ public class Position {
      * @param cell the String for the cell.
      * @return a number between -1 and one inclusive.
      */
-    static int parseCell(String cell) {
+    public static int parseCell(String cell) {
         return switch (cell.toUpperCase()) {
             case "O", "0" -> 0;
             case "X", "1" -> 1;
@@ -146,7 +146,7 @@ public class Position {
      *
      * @return true if there are three cells in a line that are the same and equal to the last player.
      */
-    boolean threeInARow() {
+    public boolean threeInARow() {
         for (int i = 0; i < gridSize; i++) {
             if (grid[i][0] == last && grid[i][1] == last && grid[i][2] == last) return true;
             if (grid[0][i] == last && grid[1][i] == last && grid[2][i] == last) return true;
@@ -162,7 +162,7 @@ public class Position {
      * @param i the row index.
      * @return an array of three ints.
      */
-    int[] projectRow(int i) {
+    public int[] projectRow(int i) {
         return grid[i];
     }
 
@@ -172,7 +172,7 @@ public class Position {
      * @param j the column index.
      * @return an array of three ints.
      */
-    int[] projectCol(int j) {
+    public int[] projectCol(int j) {
         int[] result = new int[gridSize];
         for (int i = 0; i < gridSize; i++)
             result[i] = grid[i][j];
@@ -185,7 +185,7 @@ public class Position {
      * @param b true if the matrix diagonal else transpose diagonal.
      * @return an int[3].
      */
-    int[] projectDiag(boolean b) {
+    public int[] projectDiag(boolean b) {
         int[] result = new int[gridSize];
         for (int j = 0; j < gridSize; j++) {
             int i = b ? j : gridSize - j - 1;
@@ -197,7 +197,7 @@ public class Position {
     /**
      * @return true if this Position has 9 elements.
      */
-    boolean full() {
+    public boolean full() {
         return count == 9;
     }
 
@@ -243,21 +243,21 @@ public class Position {
         return Arrays.deepHashCode(grid);
     }
 
-    Position(int[][] grid, int count, int last) {
+    public Position(int[][] grid, int count, int last) {
         this.grid = grid;
         this.count = count;
         this.last = last;
         xxx = new int[]{last, last, last};
     }
 
-    private int[][] copyGrid() {
+    public int[][] copyGrid() {
         int[][] result = new int[gridSize][gridSize];
         for (int i = 0; i < gridSize; i++)
             result[i] = Arrays.copyOf(grid[i], gridSize);
         return result;
     }
 
-    private char render(int x) {
+    public char render(int x) {
         return switch (x) {
             case 0 -> 'O';
             case 1 -> 'X';
@@ -274,7 +274,7 @@ public class Position {
      * @param i2     second row.
      * @param j2     second column.
      */
-    private void swap(int[][] matrix, int i1, int j1, int i2, int j2) {
+    public void swap(int[][] matrix, int i1, int j1, int i2, int j2) {
         int temp = matrix[i1][j1];
         matrix[i1][j1] = matrix[i2][j2];
         matrix[i2][j2] = temp;

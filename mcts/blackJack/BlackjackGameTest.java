@@ -1,6 +1,6 @@
 package com.phasmidsoftware.dsaipg.projects.mcts.blackJack;
 
-import org.junit.jupiter.api.Test;
+import org.testng.annotations.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class BlackjackGameTest {

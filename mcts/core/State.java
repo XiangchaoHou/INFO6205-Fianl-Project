@@ -4,7 +4,8 @@
 
 package com.phasmidsoftware.dsaipg.projects.mcts.core;
 
-import com.phasmidsoftware.dsaipg.adt.bqs.UnorderedIterator;
+
+import com.phasmidsoftware.dsaipg.projects.adt.bqs.UnorderedIterator;
 
 import java.util.Collection;
 import java.util.Iterator;
