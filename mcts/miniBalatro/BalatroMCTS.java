@@ -41,7 +41,7 @@ public class BalatroMCTS {
             System.out.println("\n=== New Round ===");
 
             BalatroNode rootNode = new BalatroNode(currentState);
-            BalatroMCTS mcts = new BalatroMCTS(rootNode, 10000); // Adjust iterations for performance
+            BalatroMCTS mcts = new BalatroMCTS(rootNode, 500); // Adjust iterations for performance
 
 //            System.out.println("Cards in hand: " + ((BalatroState)currentState).hand);
 
