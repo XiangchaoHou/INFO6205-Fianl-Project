@@ -1,6 +1,7 @@
-package com.phasmidsoftware.dsaipg.projects.mcts.blackJack;
+package com.phasmidsoftware.dsaipg.projects.com.phasmidsoftware.dsaipg.projects.test.blackJack;
 
 
+import com.phasmidsoftware.dsaipg.projects.mcts.blackJack.*;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -16,10 +16,10 @@ public class BlackjackState implements State<BlackjackGame> {
      * random: Random generator for simulation randomness.
      */
     final BlackjackGame game;
-    final List<Integer> playerHand;
-    final List<Integer> dealerHand;
+    public final List<Integer> playerHand;
+    public final List<Integer> dealerHand;
     final Deque<Integer> deck;
-    final int player;
+    public final int player;
     final Random random;
 
     public BlackjackState(BlackjackGame game, List<Integer> playerHand, List<Integer> dealerHand, Deque<Integer> deck, int player, Random random) {

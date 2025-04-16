@@ -1,4 +1,7 @@
-package com.phasmidsoftware.dsaipg.projects.mcts.blackJack;
+package com.phasmidsoftware.dsaipg.projects.com.phasmidsoftware.dsaipg.projects.test.blackJack;
+import com.phasmidsoftware.dsaipg.projects.mcts.blackJack.BlackjackGame;
+import com.phasmidsoftware.dsaipg.projects.mcts.blackJack.BlackjackMove;
+import com.phasmidsoftware.dsaipg.projects.mcts.blackJack.BlackjackState;
 import org.junit.jupiter.api.Test;
 import java.util.ArrayDeque;
 import java.util.Deque;

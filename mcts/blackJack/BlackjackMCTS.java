@@ -22,6 +22,7 @@ public class BlackjackMCTS {
     }
 
     public static void playFullGame(BlackjackGame game) {
+        long startTime = System.currentTimeMillis();                // start timing
         State<BlackjackGame> currentState = game.start();
 
         System.out.println("Start Blackjack Game!");
@@ -34,14 +35,12 @@ public class BlackjackMCTS {
             BlackjackMCTS mcts = new BlackjackMCTS(rootNode, 500);
 
             Move<BlackjackGame> bestMove = mcts.findBestMove();
-
             if (bestMove == null) {
                 System.out.println("No possible moves!");
                 break;
             }
 
             System.out.println("Move chosen: " + bestMove);
-
             currentState = currentState.next(bestMove);
             System.out.println(currentState);
         }
@@ -53,6 +52,8 @@ public class BlackjackMCTS {
         } else {
             System.out.println("Draw!");
         }
+        long endTime = System.currentTimeMillis();                  // end timing
+        System.out.println("Time taken: " + (endTime - startTime) + " ms");
     }
 
     public BlackjackMCTS(BlackjackNode root, int maxIterations) {
@@ -65,22 +66,14 @@ public class BlackjackMCTS {
         if (root.isLeaf()) {
             return null;
         }
-
         for (int i = 0; i < maxIterations; i++) {
             List<BlackjackNode> path = new ArrayList<>();
-            BlackjackNode selectedNode = selectWithPath(root, path);
-
-            BlackjackNode expandedNode = selectedNode;
-            if (!selectedNode.isLeaf()) {
-                expandedNode = expand(selectedNode);
-                path.add(expandedNode);
-            }
-
-            int simulationResult = simulate(expandedNode);
-
-            backpropagate(path, simulationResult);
+            BlackjackNode selected = selectWithPath(root, path);
+            BlackjackNode expanded = selected.isLeaf() ? selected : expand(selected);
+            if (expanded != selected) path.add(expanded);
+            int result = simulate(expanded);
+            backpropagate(path, result);
         }
-
         return getMostVisitedChild(root).getMove();
     }
 

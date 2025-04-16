@@ -8,30 +8,18 @@ import java.util.*;
 
 // 蒙特卡洛树搜索实现
 public class BalatroMCTS {
-    // 探索参数
-    // 最大迭代次数
-    // 根节点
-    // 随机数生成器
     private final double explorationParameter = Math.sqrt(2);
     private final int maxIterations;
     private final Random random;
     private final BalatroNode root;
 
     public static void main(String[] args) {
-        // 创建游戏并开始
         BalatroGame game = new BalatroGame();
         playGame(game);
     }
 
-    // 游戏主循环
     public static void playGame(BalatroGame game) {
-        // 初始化游戏状态
-        // 显示初始状态
-        // 循环直到游戏结束:
-        //   使用MCTS寻找最佳行动
-        //   执行行动
-        //   更新并显示状态
-        // 显示最终结果
+        long startTime = System.currentTimeMillis();          // record start
         State<BalatroGame> currentState = game.start();
 
         System.out.println("Starting Balatro Decision Game!");
@@ -39,29 +27,20 @@ public class BalatroMCTS {
 
         while (!currentState.isTerminal()) {
             System.out.println("\n=== New Round ===");
-
             BalatroNode rootNode = new BalatroNode(currentState);
-            BalatroMCTS mcts = new BalatroMCTS(rootNode, 500); // Adjust iterations for performance
-
-//            System.out.println("Cards in hand: " + ((BalatroState)currentState).hand);
+            BalatroMCTS mcts = new BalatroMCTS(rootNode, 500);
 
             Move<BalatroGame> bestMove = mcts.findBestMove();
-
             if (bestMove == null) {
                 System.out.println("No possible moves!");
                 break;
             }
 
             System.out.println("MCTS chose move: " + bestMove);
-
             int previousScore = ((BalatroState)currentState).getScore();
-
             currentState = currentState.next(bestMove);
-
             int newScore = ((BalatroState)currentState).getScore();
-            int moveScore = newScore - previousScore;
-
-            System.out.println("Move score: +" + moveScore + " points");
+            System.out.println("Move score: +" + (newScore - previousScore) + " points");
             System.out.println("Total score: " + newScore);
             System.out.println(currentState);
         }
@@ -70,6 +49,9 @@ public class BalatroMCTS {
         System.out.println("Final Score: " + ((BalatroState)currentState).getScore());
 
         analyzeResult((BalatroState)currentState);
+
+        long endTime = System.currentTimeMillis();            // record end
+        System.out.println("Time taken: " + (endTime - startTime) + " ms");
     }
 
     public BalatroMCTS(BalatroNode root, int maxIterations) {
