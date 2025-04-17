@@ -239,8 +239,8 @@ public class BalatroMCTS {
     }
 
     public static void benchmarkBalatro() {
-        int[] iterationLimits = {100, 500, 1000};
-        int numRuns = 30;
+        int[] iterationLimits = {100, 200, 400};
+        int numRuns = 15;
 
         for (int iter : iterationLimits) {
             long totalTime = 0;
