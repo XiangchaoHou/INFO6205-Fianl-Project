@@ -18,7 +18,8 @@ public class BlackjackMCTS {
 
     public static void main(String[] args) {
         BlackjackGame game = new BlackjackGame();
-        playFullGame(game);
+        benchmarkMCTS();
+        //playFullGame(game);
     }
 
     public static void playFullGame(BlackjackGame game) {
@@ -188,5 +189,42 @@ public class BlackjackMCTS {
         }
 
         return mostVisitedChild;
+    }
+
+    public static void benchmarkMCTS() {
+        int[] iterationLimits = {100, 500, 1000};
+        int gamesPerSetting = 30;
+
+        for (int iterLimit : iterationLimits) {
+            long totalTime = 0;
+            int playerWins = 0;
+
+            for (int i = 0; i < gamesPerSetting; i++) {
+                BlackjackGame game = new BlackjackGame();
+                long start = System.currentTimeMillis();
+                State<BlackjackGame> state = game.start();
+
+                while (!state.isTerminal()) {
+                    BlackjackNode rootNode = new BlackjackNode(state);
+                    BlackjackMCTS mcts = new BlackjackMCTS(rootNode, iterLimit);
+                    Move<BlackjackGame> bestMove = mcts.findBestMove();
+                    if (bestMove == null) break;
+                    state = state.next(bestMove);
+                }
+
+                long end = System.currentTimeMillis();
+                totalTime += (end - start);
+
+                if (state.winner().isPresent() && state.winner().get() == 0) {
+                    playerWins++;
+                }
+            }
+
+            double avgTime = totalTime / (double) gamesPerSetting;
+            double winRate = playerWins * 100.0 / gamesPerSetting;
+
+            System.out.printf("Iterations: %d | Avg Time: %.2f ms | Win Rate: %.2f%%\n",
+                    iterLimit, avgTime, winRate);
+        }
     }
 }

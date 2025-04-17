@@ -15,7 +15,8 @@ public class BalatroMCTS {
 
     public static void main(String[] args) {
         BalatroGame game = new BalatroGame();
-        playGame(game);
+        benchmarkBalatro();
+        //playGame(game);
     }
 
     public static void playGame(BalatroGame game) {
@@ -234,6 +235,42 @@ public class BalatroMCTS {
     private void backpropagate(List<BalatroNode> path, int result) {
         for (BalatroNode node : path) {
             node.updateStats(result);
+        }
+    }
+
+    public static void benchmarkBalatro() {
+        int[] iterationLimits = {100, 500, 1000};
+        int numRuns = 30;
+
+        for (int iter : iterationLimits) {
+            long totalTime = 0;
+            int totalScore = 0;
+
+            for (int i = 0; i < numRuns; i++) {
+                BalatroGame game = new BalatroGame();
+                State<BalatroGame> state = game.start();
+                long start = System.currentTimeMillis();
+
+                while (!state.isTerminal()) {
+                    BalatroNode rootNode = new BalatroNode(state);
+                    BalatroMCTS mcts = new BalatroMCTS(rootNode, iter);
+                    Move<BalatroGame> move = mcts.findBestMove();
+                    if (move == null) break;
+                    state = state.next(move);
+                }
+
+                long end = System.currentTimeMillis();
+                totalTime += (end - start);
+
+                int finalScore = ((BalatroState) state).getScore();
+                totalScore += finalScore;
+            }
+
+            double avgTime = totalTime / (double) numRuns;
+            double avgScore = totalScore / (double) numRuns;
+
+            System.out.printf("Iterations: %d | Avg Time: %.2f ms | Avg Score: %.2f\n",
+                    iter, avgTime, avgScore);
         }
     }
 }
