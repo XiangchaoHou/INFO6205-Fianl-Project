@@ -4,12 +4,11 @@ import com.phasmidsoftware.dsaipg.projects.mcts.core.Move;
 
 import java.util.*;
 
-// 定义玩家行动
 public class BalatroMove implements Move<BalatroGame> {
     public enum Action { PLAY, DISCARD }
 
     private final Action action;
-    private final List<Card> cards; // 要出或丢的牌
+    private final List<Card> cards; 
     private final int player;
 
     public BalatroMove(Action action, List<Card> cards, int player) {
@@ -23,7 +22,7 @@ public class BalatroMove implements Move<BalatroGame> {
     }
 
     public List<Card> getCards() {
-        return new ArrayList<>(cards);  // 始终返回防御性副本
+        return new ArrayList<>(cards);
     }
 
     @Override
@@ -42,7 +41,6 @@ public class BalatroMove implements Move<BalatroGame> {
 
         BalatroMove other = (BalatroMove) obj;
 
-        // 使用新列表进行比较以避免并发修改
         List<Card> thisList = new ArrayList<>(this.getCards());
         List<Card> otherList = new ArrayList<>(other.getCards());
 

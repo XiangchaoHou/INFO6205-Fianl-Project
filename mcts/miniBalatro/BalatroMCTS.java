@@ -6,7 +6,6 @@ import com.phasmidsoftware.dsaipg.projects.mcts.core.State;
 
 import java.util.*;
 
-// 蒙特卡洛树搜索实现
 public class BalatroMCTS {
     private final double explorationParameter = Math.sqrt(2);
     private final int maxIterations;
@@ -15,12 +14,12 @@ public class BalatroMCTS {
 
     public static void main(String[] args) {
         BalatroGame game = new BalatroGame();
-        benchmarkBalatro();
-        //playGame(game);
+//        benchmarkBalatro();
+        playGame(game);
     }
 
     public static void playGame(BalatroGame game) {
-        long startTime = System.currentTimeMillis();          // record start
+        long startTime = System.currentTimeMillis();  
         State<BalatroGame> currentState = game.start();
 
         System.out.println("Starting Balatro Decision Game!");
@@ -51,7 +50,7 @@ public class BalatroMCTS {
 
         analyzeResult((BalatroState)currentState);
 
-        long endTime = System.currentTimeMillis();            // record end
+        long endTime = System.currentTimeMillis();    
         System.out.println("Time taken: " + (endTime - startTime) + " ms");
     }
 
@@ -71,10 +70,7 @@ public class BalatroMCTS {
         System.out.println("Final score: " + state.getScore());
     }
 
-    // 寻找最佳行动
     public Move<BalatroGame> findBestMove() {
-        // 执行MCTS迭代
-        // 返回访问次数最多的子节点对应的行动
         if (root.isLeaf()) {
             return null;
         }
@@ -115,8 +111,6 @@ public class BalatroMCTS {
     }
 
 
-
-    // 选择阶段：选择最有前途的节点
     private BalatroNode selectWithPath(BalatroNode node, List<BalatroNode> path) {
         BalatroNode currentNode = node;
         path.add(currentNode);
@@ -144,7 +138,6 @@ public class BalatroMCTS {
 
             if (child.playouts() == 0) continue;
 
-            // UCT公式: 开发项 + 探索项
             double exploitationTerm = (double) child.wins() / child.playouts();
             double explorationTerm = explorationValue *
                     Math.sqrt(Math.log(node.playouts()) / child.playouts());
@@ -162,20 +155,19 @@ public class BalatroMCTS {
     private BalatroNode expand(BalatroNode node) {
         Collection<Move<BalatroGame>> possibleMoves = node.state().moves(node.state().player());
 
-        // 创建一个不可变的移动列表副本
         List<Move<BalatroGame>> untriedMoves = new ArrayList<>();
 
         for (Move<BalatroGame> move : possibleMoves) {
+            if (move == null) continue; 
+
             boolean alreadyTried = false;
 
-            // 获取已尝试过的移动列表的快照
             List<Node<BalatroGame>> childrenSnapshot = new ArrayList<>(node.children());
 
             for (Node<BalatroGame> childNode : childrenSnapshot) {
                 BalatroNode child = (BalatroNode) childNode;
                 Move<BalatroGame> childMove = child.getMove();
 
-                // 安全比较，确保不会修改原始列表
                 if (childMove != null && moveEquals(childMove, move)) {
                     alreadyTried = true;
                     break;
@@ -189,19 +181,20 @@ public class BalatroMCTS {
 
         if (untriedMoves.isEmpty()) return node;
 
-        // 选择随机未尝试的移动
         Move<BalatroGame> move = untriedMoves.get(random.nextInt(untriedMoves.size()));
         State<BalatroGame> newState = node.state().next(move);
 
-        // 添加新子节点
         node.addChild(newState, move);
         return new BalatroNode(newState, move);
     }
 
-    // 辅助方法进行安全比较
     private boolean moveEquals(Move<BalatroGame> move1, Move<BalatroGame> move2) {
         if (move1 == move2) return true;
         if (move1 == null || move2 == null) return false;
+
+        if (!(move1 instanceof BalatroMove) || !(move2 instanceof BalatroMove)) {
+            return false;
+        }
 
         BalatroMove bMove1 = (BalatroMove) move1;
         BalatroMove bMove2 = (BalatroMove) move2;
@@ -209,7 +202,6 @@ public class BalatroMCTS {
         if (bMove1.getAction() != bMove2.getAction() || bMove1.player() != bMove2.player())
             return false;
 
-        // 创建防御性副本再比较
         List<Card> cards1 = new ArrayList<>(bMove1.getCards());
         List<Card> cards2 = new ArrayList<>(bMove2.getCards());
 
@@ -219,19 +211,14 @@ public class BalatroMCTS {
     private int simulate(BalatroNode node) {
         State<BalatroGame> currentState = node.state();
 
-        // 随机模拟直到终止状态
         while (!currentState.isTerminal()) {
             Move<BalatroGame> randomMove = currentState.chooseMove(currentState.player());
             currentState = currentState.next(randomMove);
         }
 
-        // 返回终止状态的累积分数
         return ((BalatroState) currentState).getScore();
     }
 
-    /**
-     * Backpropagation phase: update statistics of all nodes in the path
-     */
     private void backpropagate(List<BalatroNode> path, int result) {
         for (BalatroNode node : path) {
             node.updateStats(result);
@@ -239,8 +226,8 @@ public class BalatroMCTS {
     }
 
     public static void benchmarkBalatro() {
-        int[] iterationLimits = {100, 200, 400};
-        int numRuns = 15;
+        int[] iterationLimits = {50, 100, 200, 400};
+        int numRuns = 20;
 
         for (int iter : iterationLimits) {
             long totalTime = 0;

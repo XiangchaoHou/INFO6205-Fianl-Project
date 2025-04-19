@@ -18,7 +18,7 @@ public class TicTacToeNode implements Node<TicTacToe> {
     private final ArrayList<TicTacToeNode> children;
     private int wins;
     private int playouts;
-    private final Move<TicTacToe> move; // 记录从父状态到本状态的走法，根节点为 null
+    private final Move<TicTacToe> move;
 
     public TicTacToeNode(State<TicTacToe> state) {
         this(state, null);
@@ -31,16 +31,15 @@ public class TicTacToeNode implements Node<TicTacToe> {
         if (state.isTerminal()) {
             playouts = 1;
             if (state.winner().isPresent())
-                wins = 2; // 胜局
+                wins = 2; 
             else
-                wins = 1; // 平局
+                wins = 1; 
         } else {
             playouts = 0;
             wins = 0;
         }
     }
 
-    // 返回本节点对应的走法
     public Move<TicTacToe> getMove() {
         return move;
     }
@@ -102,7 +101,6 @@ public class TicTacToeNode implements Node<TicTacToe> {
 
     @Override
     public void backPropagate() {
-        // 在本实现中我们使用 updateStats() 完成反向传播，不再调用此方法
     }
 
     @Override

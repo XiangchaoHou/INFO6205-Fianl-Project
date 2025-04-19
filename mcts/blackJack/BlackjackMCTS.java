@@ -5,10 +5,6 @@ import com.phasmidsoftware.dsaipg.projects.mcts.core.Node;
 import com.phasmidsoftware.dsaipg.projects.mcts.core.State;
 
 import java.util.*;
-/**
- * runs Monte Carlo Tree Search.
- * Select best paths, expand new moves, simulate random games, backpropagate results, pick best move to play.
- */
 public class BlackjackMCTS {
 
     private final double explorationParameter = Math.sqrt(2);
@@ -23,7 +19,7 @@ public class BlackjackMCTS {
     }
 
     public static void playFullGame(BlackjackGame game) {
-        long startTime = System.currentTimeMillis();                // start timing
+        long startTime = System.currentTimeMillis();                
         State<BlackjackGame> currentState = game.start();
 
         System.out.println("Start Blackjack Game!");
@@ -53,7 +49,7 @@ public class BlackjackMCTS {
         } else {
             System.out.println("Draw!");
         }
-        long endTime = System.currentTimeMillis();                  // end timing
+        long endTime = System.currentTimeMillis();                 
         System.out.println("Time taken: " + (endTime - startTime) + " ms");
     }
 

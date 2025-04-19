@@ -6,25 +6,14 @@ import com.phasmidsoftware.dsaipg.projects.mcts.core.Move;
 
 import java.util.ArrayList;
 import java.util.Collection;
-/**
- * Represents the tree node for MCTS
- * Wraps a BlackjackState. - Tracks children, move, wins, and playouts. Used in MCTS tree expansion and selection.
- */
+
 public class BlackjackNode implements Node<BlackjackGame> {
-    /**
-     * state: The current game situation at this node (the BlackjackState).
-     * children: The list of child nodes (nodes created by making moves from this state).
-     * wins: Number of wins seen from this node in simulations.
-     * playouts: Number of simulations (games played from this node).
-     * move: The move that led to this node from its parent.
-     */
     private final State<BlackjackGame> state;
     private final ArrayList<BlackjackNode> children;
     private int wins;
     private int playouts;
     private final Move<BlackjackGame> move;
 
-    // Creates a node with a given state and no move (for root node).
     public BlackjackNode(State<BlackjackGame> state) {
         this(state, null);
     }
@@ -68,16 +57,13 @@ public class BlackjackNode implements Node<BlackjackGame> {
         children.add(child);
     }
 
-    // Custom method to add child with move
     public void addChild(State<BlackjackGame> state, Move<BlackjackGame> move) {
         BlackjackNode child = new BlackjackNode(state, move);
         children.add(child);
     }
 
     @Override
-    public void backPropagate() {
-        // Not used manually.
-    }
+    public void backPropagate() {}
 
     @Override
     public int wins() {

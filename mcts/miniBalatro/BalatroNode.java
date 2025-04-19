@@ -6,20 +6,13 @@ import com.phasmidsoftware.dsaipg.projects.mcts.core.State;
 
 import java.util.*;
 
-// MCTS树节点
 public class BalatroNode implements Node<BalatroGame> {
-    // 当前状态
-    // 子节点列表
-    // 获胜次数
-    // 模拟次数
-    // 导致此节点的行动
     private final State<BalatroGame> state;
     private final ArrayList<BalatroNode> children;
     private int wins;
     private int playouts;
     private final Move<BalatroGame> move;
 
-    // 构造函数
     public BalatroNode(State<BalatroGame> state) {
         this(state, null);
     }
@@ -29,7 +22,6 @@ public class BalatroNode implements Node<BalatroGame> {
         this.move = move;
         this.children = new ArrayList<>();
 
-        // If this is a terminal state, initialize with its evaluation
         if (state.isTerminal()) {
             this.playouts = 1;
             this.wins = evaluateTerminalState((BalatroState) state);
@@ -62,7 +54,6 @@ public class BalatroNode implements Node<BalatroGame> {
     public Collection<Node<BalatroGame>> children() {
         return new ArrayList<>(children);
     }
-    // 添加子节点方法
     @Override
     public void addChild(State<BalatroGame> state) {
         BalatroNode child = new BalatroNode(state, null);
@@ -76,10 +67,8 @@ public class BalatroNode implements Node<BalatroGame> {
 
     @Override
     public void backPropagate() {
-        // For leaf nodes, wins and playouts are already set
         if (isLeaf()) return;
 
-        // For non-leaf nodes with children, aggregate children's stats
         int totalWins = 0;
         int totalPlayouts = 0;
 
@@ -103,23 +92,14 @@ public class BalatroNode implements Node<BalatroGame> {
         return playouts;
     }
 
-    /**
-     * Get the move that led to this node
-     */
     public Move<BalatroGame> getMove() {
         return move;
     }
 
-    /**
-     * Check if all possible moves from this state have been tried
-     */
     public boolean isFullyExpanded() {
         return children.size() >= state.moves(state.player()).size();
     }
 
-    /**
-     * Update the node's statistics based on a simulation result
-     */
     public void updateStats(int result) {
         wins += result;
         playouts++;

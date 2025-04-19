@@ -22,7 +22,7 @@ public class MCTS {
     }
 
     public static void playFullGame(TicTacToe game) {
-        long startTime = System.currentTimeMillis(); // Record start time
+        long startTime = System.currentTimeMillis();
 
         State<TicTacToe> currentState = game.start();
         int currentPlayer = game.opener();
@@ -47,7 +47,7 @@ public class MCTS {
             currentPlayer = 1 - currentPlayer;
         }
 
-        long endTime = System.currentTimeMillis(); // Record end time
+        long endTime = System.currentTimeMillis(); 
         System.out.println("\nGame Over!");
         System.out.println("Time taken: " + (endTime - startTime) + " ms");
 
@@ -148,7 +148,7 @@ public class MCTS {
         }
 
         if (state.winner().isEmpty()) {
-            return 1; // Draw
+            return 1; 
         } else {
             int winner = state.winner().get();
             int rootPlayer = root.state().player();

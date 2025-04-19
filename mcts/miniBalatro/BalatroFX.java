@@ -27,14 +27,12 @@ import java.util.concurrent.Executors;
 
 public class BalatroFX extends Application {
 
-    // Game state
     private BalatroGame game;
     private State<BalatroGame> currentState;
     private List<Card> selectedCards = new ArrayList<>();
     private List<Card> lastPlayedCards = new ArrayList<>();
     private List<Card> allTableCards = new ArrayList<>();
 
-    // UI components
     private VBox handCardsContainer;
     private HBox tableCardsContainer;
     private TextArea gameLogArea;
@@ -49,40 +47,30 @@ public class BalatroFX extends Application {
     private Button viewAllTableCardsButton;
     private ToggleButton autoPlayToggle;
 
-    // Thread for MCTS
     private ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    // Auto-play flag
     private boolean autoPlayEnabled = false;
 
-    // Card UI dimensions
     private final double CARD_WIDTH = 100;
     private final double CARD_HEIGHT = 140;
     private final double CARD_SPACING = 10;
 
-    /**
-     * Main method to launch the application
-     */
     public static void main(String[] args) {
         launch(args);
     }
 
     @Override
     public void start(Stage primaryStage) {
-        // Set up the UI
         BorderPane root = new BorderPane();
         root.setPadding(new Insets(10));
-        root.setStyle("-fx-background-color: #0a6522;"); // Poker table green
+        root.setStyle("-fx-background-color: #0a6522;"); 
 
-        // Top area - Game info
         HBox topInfo = createTopInfoArea();
         root.setTop(topInfo);
 
-        // Center area - Game table
         VBox centerArea = new VBox(20);
         centerArea.setAlignment(Pos.CENTER);
 
-        // Table cards section
         Label tableLabel = new Label("Last Played Cards");
         tableLabel.setFont(Font.font("Arial", FontWeight.BOLD, 16));
         tableLabel.setTextFill(Color.WHITE);
@@ -94,12 +82,10 @@ public class BalatroFX extends Application {
         viewAllTableCardsButton = new Button("View All Table Cards");
         viewAllTableCardsButton.setOnAction(e -> showAllTableCards());
 
-        // Wrap in a VBox
         VBox tableSection = new VBox(10);
         tableSection.setAlignment(Pos.CENTER);
         tableSection.getChildren().addAll(tableLabel, tableCardsContainer, viewAllTableCardsButton);
 
-        // Hand cards section
         Label handLabel = new Label("Your Hand");
         handLabel.setFont(Font.font("Arial", FontWeight.BOLD, 16));
         handLabel.setTextFill(Color.WHITE);
@@ -107,7 +93,6 @@ public class BalatroFX extends Application {
         handCardsContainer = new VBox(10);
         handCardsContainer.setAlignment(Pos.CENTER);
 
-        // Wrap in ScrollPane
         ScrollPane handScrollPane = new ScrollPane(handCardsContainer);
         handScrollPane.setFitToWidth(true);
         handScrollPane.setPrefHeight(CARD_HEIGHT + 40);
@@ -119,17 +104,13 @@ public class BalatroFX extends Application {
         centerArea.getChildren().addAll(tableSection, handSection);
         root.setCenter(centerArea);
 
-        // Bottom area - Controls and log
         VBox bottomArea = createBottomControls();
         root.setBottom(bottomArea);
 
-        // Create scene
         Scene scene = new Scene(root, 900, 700);
         primaryStage.setTitle("Mini Balatro");
         primaryStage.setScene(scene);
         primaryStage.show();
-
-        // Initialize game
         startNewGame();
     }
 
@@ -154,12 +135,10 @@ public class BalatroFX extends Application {
         deckCountLabel.setFont(Font.font("Arial", FontWeight.BOLD, 16));
         deckCountLabel.setTextFill(Color.WHITE);
 
-        // Auto-play toggle
         autoPlayToggle = new ToggleButton("Auto-Play: OFF");
         autoPlayToggle.setFont(Font.font("Arial", FontWeight.BOLD, 14));
         autoPlayToggle.setOnAction(e -> toggleAutoPlay());
 
-        // Add some space between indicators
         Region spacer1 = new Region();
         Region spacer2 = new Region();
         HBox.setHgrow(spacer1, Priority.ALWAYS);
@@ -174,7 +153,6 @@ public class BalatroFX extends Application {
         VBox bottomArea = new VBox(10);
         bottomArea.setPadding(new Insets(10));
 
-        // Control buttons
         HBox controls = new HBox(20);
         controls.setAlignment(Pos.CENTER);
 
@@ -196,7 +174,6 @@ public class BalatroFX extends Application {
 
         controls.getChildren().addAll(playButton, discardButton, mctsButton, newGameButton);
 
-        // Game log area
         gameLogArea = new TextArea();
         gameLogArea.setPrefHeight(150);
         gameLogArea.setEditable(false);
@@ -213,22 +190,17 @@ public class BalatroFX extends Application {
     }
 
     private void startNewGame() {
-        // Clear selected cards and history
         selectedCards.clear();
         lastPlayedCards.clear();
         allTableCards.clear();
 
-        // Reset game state
         game = new BalatroGame();
         currentState = game.start();
 
-        // Update UI
         updateUI();
 
-        // Log game start
         logGameEvent("New game started. Make your first move!");
 
-        // Check if auto-play is enabled
         if (autoPlayEnabled) {
             performAutoPlay();
         }
@@ -239,7 +211,6 @@ public class BalatroFX extends Application {
         autoPlayToggle.setText("Auto-Play: " + (autoPlayEnabled ? "ON" : "OFF"));
 
         if (autoPlayEnabled && !currentState.isTerminal()) {
-            // Start auto-play if enabled and game is not over
             performAutoPlay();
         }
     }
@@ -249,7 +220,6 @@ public class BalatroFX extends Application {
             return;
         }
 
-        // Use MCTS to find best move
         logGameEvent("Auto-Play: Calculating next move...");
         setControlsEnabled(false);
 
@@ -268,10 +238,8 @@ public class BalatroFX extends Application {
                 BalatroMove balatroMove = (BalatroMove) bestMove;
                 List<Card> moveCards = balatroMove.getCards();
 
-                // Clear current selection
                 selectedCards.clear();
 
-                // Find matching cards in hand
                 BalatroState state = (BalatroState) currentState;
                 List<Card> playerHand = state.hand;
 
@@ -289,13 +257,10 @@ public class BalatroFX extends Application {
                     }
                 }
 
-                // Update UI to show selection
                 updateUI();
 
-                // Log the auto move
                 logGameEvent("Auto-Play: " + balatroMove.getAction() + " " + moveCards);
 
-                // Perform the move after a short delay (so user can see the selection)
                 Timeline timeline = new Timeline(
                         new KeyFrame(Duration.seconds(1), e -> {
                             if (balatroMove.getAction() == BalatroMove.Action.PLAY) {
@@ -304,7 +269,6 @@ public class BalatroFX extends Application {
                                 discardSelectedCardsWithoutChecks();
                             }
 
-                            // Continue with auto-play if game is not over
                             if (!currentState.isTerminal() && autoPlayEnabled) {
                                 Timeline nextMoveTimeline = new Timeline(
                                         new KeyFrame(Duration.seconds(0.5), event -> performAutoPlay())
@@ -313,7 +277,6 @@ public class BalatroFX extends Application {
                             } else {
                                 setControlsEnabled(true);
 
-                                // If game is over, show the game over information in the log
                                 if (currentState.isTerminal()) {
                                     int finalScore = ((BalatroState)currentState).getScore();
                                     logGameEvent("\n=== GAME OVER ===");
@@ -331,22 +294,17 @@ public class BalatroFX extends Application {
     private void updateUI() {
         BalatroState state = (BalatroState) currentState;
 
-        // Update info labels
         scoreLabel.setText("Score: " + state.getScore());
         playsLabel.setText("Plays: " + state.remainingPlays);
         discardsLabel.setText("Discards: " + state.remainingDiscards);
         deckCountLabel.setText("Deck: " + state.deck.size());
 
-        // Update hand cards
         updateHandCards(state.hand);
 
-        // Update table cards - show only last played cards
         updateTableCards(lastPlayedCards);
 
-        // Keep track of all table cards
         allTableCards = new ArrayList<>(state.table);
 
-        // Update button states
         boolean isTerminal = state.isTerminal();
         playButton.setDisable(selectedCards.isEmpty() || state.remainingPlays <= 0);
         discardButton.setDisable(selectedCards.isEmpty() || state.remainingDiscards <= 0);
@@ -398,7 +356,6 @@ public class BalatroFX extends Application {
             return;
         }
 
-        // Create dialog to show all table cards
         Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.setTitle("All Cards on Table");
@@ -415,7 +372,6 @@ public class BalatroFX extends Application {
         FlowPane cardsPane = new FlowPane(10, 10);
         cardsPane.setAlignment(Pos.CENTER);
 
-        // Add all table cards
         for (Card card : allTableCards) {
             Region cardView = createCardView(card, false);
             cardsPane.getChildren().add(cardView);
@@ -456,12 +412,9 @@ public class BalatroFX extends Application {
 
         cardView.getChildren().addAll(topValue, centerValue);
 
-        // Add selection behavior for hand cards
         if (selectable) {
-            // Check if this card is already selected
             boolean isSelected = selectedCards.contains(card);
 
-            // Apply selection style if selected
             if (isSelected) {
                 cardView.setStyle(cardView.getStyle() + "-fx-effect: dropshadow(three-pass-box, gold, 10, 0.7, 0, 0); -fx-border-color: gold; -fx-border-width: 2;");
             }
@@ -472,10 +425,8 @@ public class BalatroFX extends Application {
                     cardView.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-border-radius: 10; -fx-border-color: #333333; -fx-border-width: 1;");
                 } else {
                     selectedCards.add(card);
-                    // Add selection animation
                     cardView.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-border-radius: 10; -fx-border-color: gold; -fx-border-width: 2;");
 
-                    // Add glow effect with animation
                     DropShadow glow = new DropShadow();
                     glow.setColor(Color.GOLD);
                     glow.setWidth(0);
@@ -493,7 +444,6 @@ public class BalatroFX extends Application {
                     timeline.play();
                 }
 
-                // Update button states
                 BalatroState state = (BalatroState) currentState;
                 playButton.setDisable(selectedCards.isEmpty() || state.remainingPlays <= 0);
                 discardButton.setDisable(selectedCards.isEmpty() || state.remainingDiscards <= 0);
@@ -545,34 +495,25 @@ public class BalatroFX extends Application {
     }
 
     private void playSelectedCardsWithoutChecks() {
-        // Create a copy of the selected cards for animation and display
         List<Card> cardsToPlay = new ArrayList<>(selectedCards);
 
-        // Create play move
         BalatroMove move = new BalatroMove(BalatroMove.Action.PLAY, cardsToPlay, 0);
 
-        // Compute score before move
         BalatroState state = (BalatroState) currentState;
         int previousScore = state.getScore();
 
-        // Apply move
         State<BalatroGame> newState = currentState.next(move);
         currentState = newState;
 
-        // Calculate score gained
         int newScore = ((BalatroState)currentState).getScore();
         int scoreGained = newScore - previousScore;
 
-        // Save these as the last played cards
         lastPlayedCards = cardsToPlay;
 
-        // Log the play
         logGameEvent("Played: " + cardsToPlay + " - Scored: " + scoreGained + " points");
 
-        // Animate the cards being played
         animateCardsPlayed(cardsToPlay, scoreGained);
 
-        // Check if game is over and log it
         if (currentState.isTerminal()) {
             Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1.5), e -> {
                 int finalScore = ((BalatroState)currentState).getScore();
@@ -583,7 +524,6 @@ public class BalatroFX extends Application {
             timeline.play();
         }
 
-        // Clear selection and update UI
         selectedCards.clear();
         updateUI();
     }
@@ -605,49 +545,38 @@ public class BalatroFX extends Application {
     }
 
     private void discardSelectedCardsWithoutChecks() {
-        // Create a copy of selected cards for animation
         List<Card> cardsToDiscard = new ArrayList<>(selectedCards);
 
-        // Create discard move
         BalatroMove move = new BalatroMove(BalatroMove.Action.DISCARD, cardsToDiscard, 0);
 
-        // Apply move
         currentState = currentState.next(move);
 
-        // Log the discard
         logGameEvent("Discarded: " + cardsToDiscard);
 
-        // Animate the cards being discarded
         animateCardsDiscarded(cardsToDiscard);
 
-        // Clear selection and update UI
         selectedCards.clear();
         updateUI();
     }
 
     private void animateCardsPlayed(List<Card> cards, int scoreGained) {
-        // Create card visuals for animation
         StackPane animationPane = new StackPane();
         animationPane.setAlignment(Pos.CENTER);
 
-        // Add an overlay to the BorderPane root
         Scene scene = handCardsContainer.getScene();
         BorderPane root = (BorderPane) scene.getRoot();
         root.getChildren().add(animationPane);
 
-        // Add floating score text
         Text scoreText = new Text("+" + scoreGained);
         scoreText.setFont(Font.font("Arial", FontWeight.BOLD, 36));
         scoreText.setFill(Color.GOLD);
         scoreText.setStroke(Color.BLACK);
         scoreText.setStrokeWidth(1.5);
 
-        // Initially position at center but invisible
         scoreText.setOpacity(0);
         StackPane.setAlignment(scoreText, Pos.CENTER);
         animationPane.getChildren().add(scoreText);
 
-        // Animate the score text
         Timeline scoreAnimation = new Timeline(
                 new KeyFrame(Duration.ZERO,
                         new KeyValue(scoreText.opacityProperty(), 0),
@@ -664,24 +593,18 @@ public class BalatroFX extends Application {
         scoreAnimation.play();
     }
 
-    private void animateCardsDiscarded(List<Card> cards) {
-        // Simple animation for discards - just update the UI
-        // More complex animations could be added here
-    }
+    private void animateCardsDiscarded(List<Card> cards) {}
 
     private void suggestMoveWithMCTS() {
-        // Disable UI controls during MCTS calculation
         setControlsEnabled(false);
         logGameEvent("Calculating best move with MCTS...");
 
-        // Run MCTS in a background thread
         executor.submit(() -> {
             BalatroNode rootNode = new BalatroNode(currentState);
-            BalatroMCTS mcts = new BalatroMCTS(rootNode, 1000); // Use fewer iterations for faster response
+            BalatroMCTS mcts = new BalatroMCTS(rootNode, 1000);
 
             Move<BalatroGame> bestMove = mcts.findBestMove();
 
-            // Update UI on JavaFX application thread
             Platform.runLater(() -> {
                 if (bestMove == null) {
                     logGameEvent("No valid moves found");
@@ -689,17 +612,13 @@ public class BalatroFX extends Application {
                     BalatroMove balatroMove = (BalatroMove) bestMove;
                     List<Card> moveCards = balatroMove.getCards();
 
-                    // Clear current selection
                     selectedCards.clear();
 
-                    // Find cards in the player's hand that match the suggested move
                     BalatroState state = (BalatroState) currentState;
                     List<Card> playerHand = state.hand;
 
-                    // Create a temporary list to track which cards we've already selected
                     List<Card> alreadySelected = new ArrayList<>();
 
-                    // For each card in the suggested move, find a matching card in hand that hasn't been selected yet
                     for (Card moveCard : moveCards) {
                         for (Card handCard : playerHand) {
                             if (!alreadySelected.contains(handCard) &&
@@ -712,14 +631,11 @@ public class BalatroFX extends Application {
                         }
                     }
 
-                    // Update UI to show selection with animation
                     updateUI();
 
-                    // Log the suggested move
                     logGameEvent("Suggested move: " + balatroMove.getAction() + " " + moveCards);
                 }
 
-                // Re-enable UI controls
                 setControlsEnabled(true);
             });
         });
@@ -736,12 +652,11 @@ public class BalatroFX extends Application {
 
     private void logGameEvent(String message) {
         gameLogArea.appendText(message + "\n");
-        gameLogArea.setScrollTop(Double.MAX_VALUE); // Scroll to bottom
+        gameLogArea.setScrollTop(Double.MAX_VALUE);
     }
 
     @Override
     public void stop() {
-        // Shut down the executor service when the application closes
         executor.shutdownNow();
     }
 }

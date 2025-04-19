@@ -2,19 +2,8 @@ package com.phasmidsoftware.dsaipg.projects.mcts.blackJack;
 
 import com.phasmidsoftware.dsaipg.projects.mcts.core.State;
 import java.util.*;
-/**
- * Represents the current game state (hands of player and dealer).
- * Holds playerHand and dealerHand. - Knows who is winning. - Knows if game is terminal.
- */
+
 public class BlackjackState implements State<BlackjackGame> {
-    /**
-     *game: The game rules being used.
-     * playerHand: Cards the player is holding.
-     * dealerHand: Cards the dealer is holding.
-     * deck: Remaining deck of cards (shuffled).
-     * player: Whose turn it is (0 = player, 1 = dealer).
-     * random: Random generator for simulation randomness.
-     */
     final BlackjackGame game;
     public final List<Integer> playerHand;
     public final List<Integer> dealerHand;
@@ -75,8 +64,7 @@ public class BlackjackState implements State<BlackjackGame> {
             if (blackjackMove.getAction() == BlackjackMove.Action.HIT && !newDeck.isEmpty()) {
                 newPlayerHand.add(newDeck.pop());
             } else if (blackjackMove.getAction() == BlackjackMove.Action.STAND) {
-                newPlayer = 1; // Switch to dealer
-                // Dealer plays automatically
+                newPlayer = 1; 
                 while (dealerShouldHit(newDealerHand) && !newDeck.isEmpty()) {
                     newDealerHand.add(newDeck.pop());
                 }
@@ -93,8 +81,8 @@ public class BlackjackState implements State<BlackjackGame> {
         int playerTotal = handValue(playerHand);
         int dealerTotal = handValue(dealerHand);
 
-        if (playerTotal > 21) return Optional.of(1); // dealer wins
-        if (dealerTotal > 21) return Optional.of(0); // player wins
+        if (playerTotal > 21) return Optional.of(1); 
+        if (dealerTotal > 21) return Optional.of(0); 
 
         return playerTotal > dealerTotal ? Optional.of(0) : (playerTotal < dealerTotal ? Optional.of(1) : Optional.empty());
     }

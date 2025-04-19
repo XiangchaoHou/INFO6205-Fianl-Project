@@ -1,8 +1,5 @@
 package com.phasmidsoftware.dsaipg.projects.mcts.miniBalatro;
 
-/**
- * Represents a standard playing card with rank and suit
- */
 public class Card implements Comparable<Card> {
 
     public enum Suit {
@@ -20,7 +17,7 @@ public class Card implements Comparable<Card> {
         }
     }
 
-    private final int rank;  // 1=Ace, 11=Jack, 12=Queen, 13=King
+    private final int rank;
     private final Suit suit;
 
     public Card(int rank, Suit suit) {
@@ -39,9 +36,6 @@ public class Card implements Comparable<Card> {
         return suit;
     }
 
-    /**
-     * Returns the face value of the card (A, 2-10, J, Q, K)
-     */
     public String getFaceValue() {
         switch (rank) {
             case 1: return "A";
@@ -72,7 +66,6 @@ public class Card implements Comparable<Card> {
 
     @Override
     public int compareTo(Card other) {
-        // Primary sort by rank, secondary by suit
         int rankCompare = Integer.compare(this.rank, other.rank);
         if (rankCompare != 0) {
             return rankCompare;
