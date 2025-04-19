@@ -5,6 +5,7 @@ import com.phasmidsoftware.dsaipg.projects.mcts.core.Node;
 import com.phasmidsoftware.dsaipg.projects.mcts.core.State;
 
 import java.util.*;
+
 public class BlackjackMCTS {
 
     private final double explorationParameter = Math.sqrt(2);
@@ -19,7 +20,7 @@ public class BlackjackMCTS {
     }
 
     public static void playFullGame(BlackjackGame game) {
-        long startTime = System.currentTimeMillis();                
+        long startTime = System.currentTimeMillis();
         State<BlackjackGame> currentState = game.start();
 
         System.out.println("Start Blackjack Game!");
@@ -49,7 +50,7 @@ public class BlackjackMCTS {
         } else {
             System.out.println("Draw!");
         }
-        long endTime = System.currentTimeMillis();                 
+        long endTime = System.currentTimeMillis();
         System.out.println("Time taken: " + (endTime - startTime) + " ms");
     }
 
@@ -188,12 +189,14 @@ public class BlackjackMCTS {
     }
 
     public static void benchmarkMCTS() {
-        int[] iterationLimits = {100, 500, 1000};
-        int gamesPerSetting = 30;
+        int[] iterationLimits = {200, 1000, 3000, 5000};
+        int gamesPerSetting = 50;
 
         for (int iterLimit : iterationLimits) {
             long totalTime = 0;
             int playerWins = 0;
+            int dealerWins = 0;
+            int draws = 0;
 
             for (int i = 0; i < gamesPerSetting; i++) {
                 BlackjackGame game = new BlackjackGame();
@@ -211,16 +214,22 @@ public class BlackjackMCTS {
                 long end = System.currentTimeMillis();
                 totalTime += (end - start);
 
-                if (state.winner().isPresent() && state.winner().get() == 0) {
+                Optional<Integer> winner = state.winner();
+                if (winner.isEmpty()) {
+                    draws++;
+                } else if (winner.get() == 0) {
                     playerWins++;
+                } else {
+                    dealerWins++;
                 }
             }
 
             double avgTime = totalTime / (double) gamesPerSetting;
             double winRate = playerWins * 100.0 / gamesPerSetting;
+            double drawRate = draws * 100.0 / gamesPerSetting;
 
-            System.out.printf("Iterations: %d | Avg Time: %.2f ms | Win Rate: %.2f%%\n",
-                    iterLimit, avgTime, winRate);
+            System.out.printf("Iterations: %d | Avg Time: %.2f ms | Win Rate: %.2f%% | Draw Rate: %.2f%% | Dealer Win: %.2f%%\n",
+                    iterLimit, avgTime, winRate, drawRate, 100.0 - winRate - drawRate);
         }
     }
 }
